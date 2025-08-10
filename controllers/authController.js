@@ -28,6 +28,7 @@ const loginUser = asyncHandler(async (req, res) => {
     const passwordMatch = await user.comparePassword(password);
     console.log('Password match:', passwordMatch);
     
+    if (passwordMatch) {
       if (!user.isActive) {
         res.status(401);
         throw new Error('Compte désactivé');

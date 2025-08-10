@@ -13,6 +13,8 @@ const generateToken = (id) => {
 // @access  Public
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
+  
+  console.log('Login attempt:', { email, passwordLength: password?.length });
 
   if (!email || !password) {
     res.status(400);
@@ -20,22 +22,30 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 
   const user = await User.findOne({ email }).populate('department');
+  console.log('User found:', user ? 'Yes' : 'No');
+  
+  if (user) {
+    const passwordMatch = await user.comparePassword(password);
+    console.log('Password match:', passwordMatch);
+    
+      if (!user.isActive) {
+        res.status(401);
+        throw new Error('Compte désactivé');
+      }
 
-  if (user && (await user.comparePassword(password))) {
-    if (!user.isActive) {
+      res.json({
+        _id: user._id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        department: user.department,
+        token: generateToken(user._id),
+      });
+    } else {
       res.status(401);
-      throw new Error('Compte désactivé');
+      throw new Error('Email ou mot de passe incorrect');
     }
-
-    res.json({
-      _id: user._id,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      role: user.role,
-      department: user.department,
-      token: generateToken(user._id),
-    });
   } else {
     res.status(401);
     throw new Error('Email ou mot de passe incorrect');

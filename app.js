@@ -22,6 +22,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Routes
+app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/university', require('./routes/universityRoutes'));
 app.use('/api/departments', require('./routes/departmentRoutes'));
 app.use('/api/teachers', require('./routes/teacherRoutes'));
@@ -33,6 +34,7 @@ app.use('/api/study-plans', require('./routes/studyPlanRoutes'));
 app.use('/api/academic-years', require('./routes/academicYearRoutes'));
 app.use('/api/tracks', require('./routes/trackRoutes'));
 app.use('/api/grades', require('./routes/gradeRoutes'));
+app.use('/api/users', require('./routes/userRoutes'));
 
 // 404 handler
 app.use((req, res, next) => {
@@ -43,6 +45,7 @@ app.use((req, res, next) => {
 
 // Error handler
 app.use((err, req, res, next) => {
+  console.error('Error:', err.message);
   const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
   res.status(statusCode);
   res.json({

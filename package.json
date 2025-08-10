@@ -1,5 +1,5 @@
 {
-  "name": "backend",
+  "name": "chronaxis-backend",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -7,12 +7,14 @@
     "dev": "nodemon ./bin/www"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.2",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "debug": "^4.3.4",
     "dotenv": "^17.0.0",
     "express": "^4.21.2",
     "express-async-handler": "^1.2.0",
+    "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.16.1",
     "morgan": "^1.10.0"
   }

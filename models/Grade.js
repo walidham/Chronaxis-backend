@@ -9,11 +9,7 @@ const gradeSchema = new mongoose.Schema({
   abbreviation: { 
     type: String, 
     required: true 
-  },
-  level: { 
-    type: Number, 
-    required: true 
-  } // Pour hiérarchiser les grades
+  }
 });
 
 module.exports = mongoose.model('Grade', gradeSchema);

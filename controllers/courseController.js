@@ -5,7 +5,7 @@ const asyncHandler = require('express-async-handler');
 // @route   GET /api/courses
 // @access  Public
 const getCourses = asyncHandler(async (req, res) => {
-  const courses = await Course.find({}).populate('department').populate('teachers');
+  const courses = await Course.find({}).populate('department');
   res.json(courses);
 });
 
@@ -14,8 +14,7 @@ const getCourses = asyncHandler(async (req, res) => {
 // @access  Public
 const getCourseById = asyncHandler(async (req, res) => {
   const course = await Course.findById(req.params.id)
-    .populate('department')
-    .populate('teachers');
+    .populate('department');
 
   if (course) {
     res.json(course);
@@ -29,7 +28,7 @@ const getCourseById = asyncHandler(async (req, res) => {
 // @route   POST /api/courses
 // @access  Private
 const createCourse = asyncHandler(async (req, res) => {
-  const { name, code, semester, hours, department, teachers } = req.body;
+  const { name, code, semester, hours, department, track } = req.body;
 
   const course = await Course.create({
     name,
@@ -37,17 +36,18 @@ const createCourse = asyncHandler(async (req, res) => {
     semester,
     hours,
     department,
-    teachers: teachers || []
+    track
   });
 
-  res.status(201).json(course);
+  const populatedCourse = await Course.findById(course._id).populate('department');
+  res.status(201).json(populatedCourse);
 });
 
 // @desc    Update a course
 // @route   PUT /api/courses/:id
 // @access  Private
 const updateCourse = asyncHandler(async (req, res) => {
-  const { name, code, semester, hours, department, teachers } = req.body;
+  const { name, code, semester, hours, department, track } = req.body;
 
   const course = await Course.findById(req.params.id);
 
@@ -57,10 +57,11 @@ const updateCourse = asyncHandler(async (req, res) => {
     course.semester = semester || course.semester;
     course.hours = hours || course.hours;
     course.department = department || course.department;
-    course.teachers = teachers || course.teachers;
+    course.track = track || course.track;
 
     const updatedCourse = await course.save();
-    res.json(updatedCourse);
+    const populatedCourse = await Course.findById(updatedCourse._id).populate('department');
+    res.json(populatedCourse);
   } else {
     res.status(404);
     throw new Error('Course not found');

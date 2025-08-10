@@ -41,7 +41,10 @@ const createClass = asyncHandler(async (req, res) => {
     students
   });
 
-  res.status(201).json(classItem);
+  const populatedClass = await Class.findById(classItem._id)
+    .populate('department')
+    .populate('academicYear');
+  res.status(201).json(populatedClass);
 });
 
 // @desc    Update a class
@@ -61,7 +64,10 @@ const updateClass = asyncHandler(async (req, res) => {
     classItem.students = students || classItem.students;
 
     const updatedClass = await classItem.save();
-    res.json(updatedClass);
+    const populatedClass = await Class.findById(updatedClass._id)
+      .populate('department')
+      .populate('academicYear');
+    res.json(populatedClass);
   } else {
     res.status(404);
     throw new Error('Class not found');

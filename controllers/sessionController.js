@@ -143,7 +143,7 @@ const deleteSession = asyncHandler(async (req, res) => {
   const session = await Session.findById(req.params.id);
 
   if (session) {
-    await session.remove();
+    await Session.findByIdAndDelete(req.params.id);
     res.json({ message: 'Session removed' });
   } else {
     res.status(404);

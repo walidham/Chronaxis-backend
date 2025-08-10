@@ -2,24 +2,23 @@ const Grade = require('../models/Grade');
 const asyncHandler = require('express-async-handler');
 
 const getGrades = asyncHandler(async (req, res) => {
-  const grades = await Grade.find({}).sort({ level: -1 });
+  const grades = await Grade.find({}).sort({ name: 1 });
   res.json(grades);
 });
 
 const createGrade = asyncHandler(async (req, res) => {
-  const { name, abbreviation, level } = req.body;
-  const grade = await Grade.create({ name, abbreviation, level });
+  const { name, abbreviation } = req.body;
+  const grade = await Grade.create({ name, abbreviation });
   res.status(201).json(grade);
 });
 
 const updateGrade = asyncHandler(async (req, res) => {
-  const { name, abbreviation, level } = req.body;
+  const { name, abbreviation } = req.body;
   const grade = await Grade.findById(req.params.id);
 
   if (grade) {
     grade.name = name || grade.name;
     grade.abbreviation = abbreviation || grade.abbreviation;
-    grade.level = level || grade.level;
     const updatedGrade = await grade.save();
     res.json(updatedGrade);
   } else {

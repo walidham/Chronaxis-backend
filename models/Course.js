@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const courseSchema = new mongoose.Schema({
   name: { type: String, required: true },
   code: { type: String, required: true, unique: true },
-  semester: { type: Number, required: true, min: 1, max: 5 },
+  semester: { type: Number, required: true, min: 1, max: 2 },
   hours: {
     lectures: { type: Number, default: 0 },
     tutorials: { type: Number, default: 0 },
@@ -16,14 +16,10 @@ const courseSchema = new mongoose.Schema({
     required: true
   },
   track: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Track',
-    required: true
-  },
-  teachers: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Teacher'
-  }]
+    type: String,
+    required: true,
+    enum: ['TC', 'MDW', 'DSI', 'RSI']
+  }
 });
 
 module.exports = mongoose.model('Course', courseSchema);

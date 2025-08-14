@@ -40,7 +40,7 @@ const getSessionById = asyncHandler(async (req, res) => {
     res.json(session);
   } else {
     res.status(404);
-    throw new Error('Session not found');
+    throw new Error('Séance non trouvée');
   }
 });
 
@@ -64,7 +64,7 @@ const createSession = asyncHandler(async (req, res) => {
 
   if (conflicts.length > 0) {
     res.status(400);
-    throw new Error('Session conflict detected: ' + conflicts.join(', '));
+    throw new Error('Conflit de séance détecté: ' + conflicts.join(', '));
   }
 
   const session = await Session.create({
@@ -92,7 +92,7 @@ const updateSession = asyncHandler(async (req, res) => {
 
   if (!session) {
     res.status(404);
-    throw new Error('Session not found');
+    throw new Error('Séance non trouvée');
   }
 
   // Check for conflicts only if time/room/teacher/class has changed
@@ -118,7 +118,7 @@ const updateSession = asyncHandler(async (req, res) => {
 
     if (conflicts.length > 0) {
       res.status(400);
-      throw new Error('Session conflict detected: ' + conflicts.join(', '));
+      throw new Error('Conflit de séance détecté: ' + conflicts.join(', '));
     }
   }
 
@@ -144,10 +144,10 @@ const deleteSession = asyncHandler(async (req, res) => {
 
   if (session) {
     await Session.findByIdAndDelete(req.params.id);
-    res.json({ message: 'Session removed' });
+    res.json({ message: 'Séance supprimée' });
   } else {
     res.status(404);
-    throw new Error('Session not found');
+    throw new Error('Séance non trouvée');
   }
 });
 
@@ -173,7 +173,10 @@ const checkSessionConflicts = async ({ room, teacher, classId, dayOfWeek, timeSl
   });
   
   if (roomConflict) {
-    conflicts.push('Room is already booked for this time slot');
+    // Si on exclut une session (modification), vérifier que ce n'est pas la même
+    if (!excludeSessionId || roomConflict._id.toString() !== excludeSessionId) {
+      conflicts.push('La salle est déjà réservée pour ce créneau horaire');
+    }
   }
   
   // Check teacher conflict
@@ -183,7 +186,10 @@ const checkSessionConflicts = async ({ room, teacher, classId, dayOfWeek, timeSl
   });
   
   if (teacherConflict) {
-    conflicts.push('Teacher is already assigned to another session at this time');
+    // Si on exclut une session (modification), vérifier que ce n'est pas la même
+    if (!excludeSessionId || teacherConflict._id.toString() !== excludeSessionId) {
+      conflicts.push('L\'enseignant est déjà assigné à une autre séance à cette heure');
+    }
   }
   
   // For TP sessions with groups, allow up to 2 sessions per class
@@ -195,7 +201,10 @@ const checkSessionConflicts = async ({ room, teacher, classId, dayOfWeek, timeSl
     });
     
     if (classConflict) {
-      conflicts.push('Class already has a session scheduled at this time');
+      // Si on exclut une session (modification), vérifier que ce n'est pas la même
+      if (!excludeSessionId || classConflict._id.toString() !== excludeSessionId) {
+        conflicts.push('La classe a déjà une séance programmée à cette heure');
+      }
     }
   } else {
     // For TP with groups, check if there are already 2 sessions for this class
@@ -206,7 +215,7 @@ const checkSessionConflicts = async ({ room, teacher, classId, dayOfWeek, timeSl
     });
     
     if (classSessions.length >= 2) {
-      conflicts.push('Class already has the maximum number of TP groups (2) for this time slot');
+      conflicts.push('La classe a déjà le nombre maximum de groupes TP (2) pour ce créneau');
     }
     
     // Check if the group name is already used for this class at this time
@@ -217,7 +226,10 @@ const checkSessionConflicts = async ({ room, teacher, classId, dayOfWeek, timeSl
     });
     
     if (groupConflict) {
-      conflicts.push(`Group "${group}" already has a session for this class at this time`);
+      // Si on exclut une session (modification), vérifier que ce n'est pas la même
+      if (!excludeSessionId || groupConflict._id.toString() !== excludeSessionId) {
+        conflicts.push(`Le groupe "${group}" a déjà une séance pour cette classe à cette heure`);
+      }
     }
   }
   

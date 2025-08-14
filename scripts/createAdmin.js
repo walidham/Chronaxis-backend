@@ -1,10 +1,15 @@
+require('dotenv').config();
 const mongoose = require('mongoose');
 const User = require('../models/User');
 
 const createAdmin = async () => {
   try {
     // Connexion à MongoDB
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/university-schedule');
+    if (!process.env.MONGODB_URI) {
+      console.error('MONGODB_URI non définie dans .env');
+      process.exit(1);
+    }
+    await mongoose.connect(process.env.MONGODB_URI);
     console.log('Connecté à MongoDB');
 
     // Vérifier si un admin existe déjà

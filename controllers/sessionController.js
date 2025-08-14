@@ -173,10 +173,7 @@ const checkSessionConflicts = async ({ room, teacher, classId, dayOfWeek, timeSl
   });
   
   if (roomConflict) {
-    // Si on exclut une session (modification), vérifier que ce n'est pas la même
-    if (!excludeSessionId || roomConflict._id.toString() !== excludeSessionId) {
-      conflicts.push('La salle est déjà réservée pour ce créneau horaire');
-    }
+    conflicts.push('La salle est déjà réservée pour ce créneau horaire');
   }
   
   // Check teacher conflict
@@ -186,10 +183,7 @@ const checkSessionConflicts = async ({ room, teacher, classId, dayOfWeek, timeSl
   });
   
   if (teacherConflict) {
-    // Si on exclut une session (modification), vérifier que ce n'est pas la même
-    if (!excludeSessionId || teacherConflict._id.toString() !== excludeSessionId) {
-      conflicts.push('L\'enseignant est déjà assigné à une autre séance à cette heure');
-    }
+    conflicts.push('L\'enseignant est déjà assigné à une autre séance à cette heure');
   }
   
   // For TP sessions with groups, allow up to 2 sessions per class
@@ -201,10 +195,7 @@ const checkSessionConflicts = async ({ room, teacher, classId, dayOfWeek, timeSl
     });
     
     if (classConflict) {
-      // Si on exclut une session (modification), vérifier que ce n'est pas la même
-      if (!excludeSessionId || classConflict._id.toString() !== excludeSessionId) {
-        conflicts.push('La classe a déjà une séance programmée à cette heure');
-      }
+      conflicts.push('La classe a déjà une séance programmée à cette heure');
     }
   } else {
     // For TP with groups, check if there are already 2 sessions for this class
@@ -226,10 +217,7 @@ const checkSessionConflicts = async ({ room, teacher, classId, dayOfWeek, timeSl
     });
     
     if (groupConflict) {
-      // Si on exclut une session (modification), vérifier que ce n'est pas la même
-      if (!excludeSessionId || groupConflict._id.toString() !== excludeSessionId) {
-        conflicts.push(`Le groupe "${group}" a déjà une séance pour cette classe à cette heure`);
-      }
+      conflicts.push(`Le groupe "${group}" a déjà une séance pour cette classe à cette heure`);
     }
   }
   

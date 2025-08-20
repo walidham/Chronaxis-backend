@@ -5,9 +5,9 @@ const classSchema = new mongoose.Schema({
   name: { type: String, required: true },
   level: { type: Number, required: true, min: 1, max: 3 },
   track: {
-    type: String,
-    required: true,
-    enum: ['TC', 'MDW', 'DSI', 'RSI']
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Track',
+    required: true
   },
   department: {
     type: mongoose.Schema.Types.ObjectId,

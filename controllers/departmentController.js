@@ -66,10 +66,9 @@ const updateDepartment = asyncHandler(async (req, res) => {
 // @route   DELETE /api/departments/:id
 // @access  Private/Admin
 const deleteDepartment = asyncHandler(async (req, res) => {
-  const department = await Department.findById(req.params.id);
+  const department = await Department.findByIdAndDelete(req.params.id);
 
   if (department) {
-    await department.remove();
     res.json({ message: 'Department removed' });
   } else {
     res.status(404);

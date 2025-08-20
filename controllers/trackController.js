@@ -1,9 +1,8 @@
-// backend/controllers/trackController.js
 const Track = require('../models/Track');
 const asyncHandler = require('express-async-handler');
 
-// @desc    Get all tracks
-// @route   GET /api/tracks
+// @desc    Get tracks by department
+// @route   GET /api/tracks?department=:departmentId
 // @access  Public
 const getTracks = asyncHandler(async (req, res) => {
   const { department } = req.query;
@@ -17,79 +16,61 @@ const getTracks = asyncHandler(async (req, res) => {
   res.json(tracks);
 });
 
-// @desc    Get track by ID
-// @route   GET /api/tracks/:id
-// @access  Public
-const getTrackById = asyncHandler(async (req, res) => {
-  const track = await Track.findById(req.params.id).populate('department');
-  
-  if (track) {
-    res.json(track);
-  } else {
-    res.status(404);
-    throw new Error('Track not found');
-  }
-});
-
-// @desc    Create a track
+// @desc    Create track
 // @route   POST /api/tracks
 // @access  Private
 const createTrack = asyncHandler(async (req, res) => {
-  const { name, description, department } = req.body;
-
-  if (!department) {
-    res.status(400);
-    throw new Error('Department is required');
-  }
-
+  const { name, code, department } = req.body;
+  
   const track = await Track.create({
     name,
-    description,
+    code,
     department
   });
-
-  res.status(201).json(track);
+  
+  const populatedTrack = await Track.findById(track._id).populate('department');
+  res.status(201).json(populatedTrack);
 });
 
-// @desc    Update a track
+// @desc    Update track
 // @route   PUT /api/tracks/:id
 // @access  Private
 const updateTrack = asyncHandler(async (req, res) => {
-  const { name, description, department } = req.body;
-
+  const { name, code, department } = req.body;
+  
   const track = await Track.findById(req.params.id);
-
-  if (track) {
-    track.name = name || track.name;
-    track.description = description || track.description;
-    track.department = department || track.department;
-
-    const updatedTrack = await track.save();
-    res.json(updatedTrack);
-  } else {
+  
+  if (!track) {
     res.status(404);
-    throw new Error('Track not found');
+    throw new Error('Parcours non trouvé');
   }
+  
+  track.name = name || track.name;
+  track.code = code || track.code;
+  track.department = department || track.department;
+  
+  const updatedTrack = await track.save();
+  const populatedTrack = await Track.findById(updatedTrack._id).populate('department');
+  res.json(populatedTrack);
 });
 
-// @desc    Delete a track
+// @desc    Delete track
 // @route   DELETE /api/tracks/:id
 // @access  Private
 const deleteTrack = asyncHandler(async (req, res) => {
   const track = await Track.findById(req.params.id);
-
-  if (track) {
-    await track.remove();
-    res.json({ message: 'Track removed' });
-  } else {
+  
+  if (!track) {
     res.status(404);
-    throw new Error('Track not found');
+    throw new Error('Parcours non trouvé');
   }
+  
+  await Track.findByIdAndDelete(req.params.id);
+  res.json({ message: 'Parcours supprimé' });
 });
 
 module.exports = {
   getTracks,
-  getTrackById,
   createTrack,
   updateTrack,
   deleteTrack,

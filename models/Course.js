@@ -16,9 +16,9 @@ const courseSchema = new mongoose.Schema({
     required: true
   },
   track: {
-    type: String,
-    required: true,
-    enum: ['TC', 'MDW', 'DSI', 'RSI']
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Track',
+    required: true
   }
 });
 

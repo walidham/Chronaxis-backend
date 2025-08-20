@@ -5,7 +5,7 @@ const asyncHandler = require('express-async-handler');
 // @route   GET /api/classes
 // @access  Public
 const getClasses = asyncHandler(async (req, res) => {
-  const classes = await Class.find({}).populate('department').populate('academicYear');
+  const classes = await Class.find({}).populate('department').populate('academicYear').populate('track');
   res.json(classes);
 });
 
@@ -43,7 +43,8 @@ const createClass = asyncHandler(async (req, res) => {
 
   const populatedClass = await Class.findById(classItem._id)
     .populate('department')
-    .populate('academicYear');
+    .populate('academicYear')
+    .populate('track');
   res.status(201).json(populatedClass);
 });
 
@@ -66,7 +67,8 @@ const updateClass = asyncHandler(async (req, res) => {
     const updatedClass = await classItem.save();
     const populatedClass = await Class.findById(updatedClass._id)
       .populate('department')
-      .populate('academicYear');
+      .populate('academicYear')
+      .populate('track');
     res.json(populatedClass);
   } else {
     res.status(404);

@@ -28,9 +28,8 @@ const updateGrade = asyncHandler(async (req, res) => {
 });
 
 const deleteGrade = asyncHandler(async (req, res) => {
-  const grade = await Grade.findById(req.params.id);
+  const grade = await Grade.findByIdAndDelete(req.params.id);
   if (grade) {
-    await grade.remove();
     res.json({ message: 'Grade removed' });
   } else {
     res.status(404);

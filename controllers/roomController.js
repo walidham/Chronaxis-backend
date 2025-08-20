@@ -69,10 +69,9 @@ const updateRoom = asyncHandler(async (req, res) => {
 // @route   DELETE /api/rooms/:id
 // @access  Private
 const deleteRoom = asyncHandler(async (req, res) => {
-  const room = await Room.findById(req.params.id);
+  const room = await Room.findByIdAndDelete(req.params.id);
 
   if (room) {
-    await room.remove();
     res.json({ message: 'Room removed' });
   } else {
     res.status(404);

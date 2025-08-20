@@ -5,7 +5,14 @@ const asyncHandler = require('express-async-handler');
 // @route   GET /api/courses
 // @access  Public
 const getCourses = asyncHandler(async (req, res) => {
-  const courses = await Course.find({}).populate('department');
+  const { department, track, semester } = req.query;
+  
+  let query = {};
+  if (department) query.department = department;
+  if (track) query.track = track;
+  if (semester) query.semester = semester;
+  
+  const courses = await Course.find(query).populate('department').populate('track');
   res.json(courses);
 });
 
@@ -39,7 +46,7 @@ const createCourse = asyncHandler(async (req, res) => {
     track
   });
 
-  const populatedCourse = await Course.findById(course._id).populate('department');
+  const populatedCourse = await Course.findById(course._id).populate('department').populate('track');
   res.status(201).json(populatedCourse);
 });
 
@@ -60,7 +67,7 @@ const updateCourse = asyncHandler(async (req, res) => {
     course.track = track || course.track;
 
     const updatedCourse = await course.save();
-    const populatedCourse = await Course.findById(updatedCourse._id).populate('department');
+    const populatedCourse = await Course.findById(updatedCourse._id).populate('department').populate('track');
     res.json(populatedCourse);
   } else {
     res.status(404);
@@ -72,10 +79,9 @@ const updateCourse = asyncHandler(async (req, res) => {
 // @route   DELETE /api/courses/:id
 // @access  Private
 const deleteCourse = asyncHandler(async (req, res) => {
-  const course = await Course.findById(req.params.id);
+  const course = await Course.findByIdAndDelete(req.params.id);
 
   if (course) {
-    await course.remove();
     res.json({ message: 'Course removed' });
   } else {
     res.status(404);

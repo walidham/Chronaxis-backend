@@ -39,10 +39,9 @@ const updateAcademicYear = asyncHandler(async (req, res) => {
 });
 
 const deleteAcademicYear = asyncHandler(async (req, res) => {
-  const academicYear = await AcademicYear.findById(req.params.id);
+  const academicYear = await AcademicYear.findByIdAndDelete(req.params.id);
 
   if (academicYear) {
-    await academicYear.remove();
     res.json({ message: 'Academic year removed' });
   } else {
     res.status(404);

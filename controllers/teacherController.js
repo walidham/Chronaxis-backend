@@ -19,7 +19,7 @@ const getTeacherById = asyncHandler(async (req, res) => {
     res.json(teacher);
   } else {
     res.status(404);
-    throw new Error('Teacher not found');
+    throw new Error('Enseignant non trouvé');
   }
 });
 
@@ -61,7 +61,7 @@ const updateTeacher = asyncHandler(async (req, res) => {
     res.json(updatedTeacher);
   } else {
     res.status(404);
-    throw new Error('Teacher not found');
+    throw new Error('Enseignant non trouvé');
   }
 });
 
@@ -72,11 +72,11 @@ const deleteTeacher = asyncHandler(async (req, res) => {
   const teacher = await Teacher.findById(req.params.id);
 
   if (teacher) {
-    await teacher.remove();
-    res.json({ message: 'Teacher removed' });
+    await Teacher.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Enseignant supprimé avec succès' });
   } else {
     res.status(404);
-    throw new Error('Teacher not found');
+    throw new Error('Enseignant non trouvé');
   }
 });
 

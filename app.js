@@ -40,20 +40,35 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Import routes
+const authRoutes = require('./routes/authRoutes');
+const universityRoutes = require('./routes/universityRoutes');
+const departmentRoutes = require('./routes/departmentRoutes');
+const teacherRoutes = require('./routes/teacherRoutes');
+const classRoutes = require('./routes/classRoutes');
+const courseRoutes = require('./routes/courseRoutes');
+const roomRoutes = require('./routes/roomRoutes');
+const sessionRoutes = require('./routes/sessionRoutes');
+const studyPlanRoutes = require('./routes/studyPlanRoutes');
+const academicYearRoutes = require('./routes/academicYearRoutes');
+const trackRoutes = require('./routes/trackRoutes');
+const gradeRoutes = require('./routes/gradeRoutes');
+const userRoutes = require('./routes/userRoutes');
+
 // Routes
-app.use('/api/auth', require('./routes/authRoutes'));
-app.use('/api/university', require('./routes/universityRoutes'));
-app.use('/api/departments', require('./routes/departmentRoutes'));
-app.use('/api/teachers', require('./routes/teacherRoutes'));
-app.use('/api/classes', require('./routes/classRoutes'));
-app.use('/api/courses', require('./routes/courseRoutes'));
-app.use('/api/rooms', require('./routes/roomRoutes'));
-app.use('/api/sessions', require('./routes/sessionRoutes'));
-app.use('/api/study-plans', require('./routes/studyPlanRoutes'));
-app.use('/api/academic-years', require('./routes/academicYearRoutes'));
-app.use('/api/tracks', require('./routes/trackRoutes'));
-app.use('/api/grades', require('./routes/gradeRoutes'));
-app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/auth', authRoutes);
+app.use('/api/university', universityRoutes);
+app.use('/api/departments', departmentRoutes);
+app.use('/api/teachers', teacherRoutes);
+app.use('/api/classes', classRoutes);
+app.use('/api/courses', courseRoutes);
+app.use('/api/rooms', roomRoutes);
+app.use('/api/sessions', sessionRoutes);
+app.use('/api/study-plans', studyPlanRoutes);
+app.use('/api/academic-years', academicYearRoutes);
+app.use('/api/tracks', trackRoutes);
+app.use('/api/grades', gradeRoutes);
+app.use('/api/users', userRoutes);
 
 // 404 handler
 app.use((req, res, next) => {

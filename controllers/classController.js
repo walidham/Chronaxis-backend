@@ -22,7 +22,7 @@ const getClassById = asyncHandler(async (req, res) => {
     res.json(classItem);
   } else {
     res.status(404);
-    throw new Error('Class not found');
+    throw new Error('Classe non trouvée');
   }
 });
 
@@ -72,7 +72,7 @@ const updateClass = asyncHandler(async (req, res) => {
     res.json(populatedClass);
   } else {
     res.status(404);
-    throw new Error('Class not found');
+    throw new Error('Classe non trouvée');
   }
 });
 
@@ -83,11 +83,11 @@ const deleteClass = asyncHandler(async (req, res) => {
   const classItem = await Class.findById(req.params.id);
 
   if (classItem) {
-    await classItem.remove();
-    res.json({ message: 'Class removed' });
+    await Class.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Classe supprimée avec succès' });
   } else {
     res.status(404);
-    throw new Error('Class not found');
+    throw new Error('Classe non trouvée');
   }
 });
 

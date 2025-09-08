@@ -63,8 +63,9 @@ const createSession = asyncHandler(async (req, res) => {
   });
 
   if (conflicts.length > 0) {
+    console.log('Conflicts detected:', conflicts);
     res.status(400);
-    throw new Error('Conflit de séance détecté: ' + conflicts.join(', '));
+    throw new Error(conflicts.join('\n\n'));
   }
 
   const session = await Session.create({
@@ -117,8 +118,9 @@ const updateSession = asyncHandler(async (req, res) => {
     });
 
     if (conflicts.length > 0) {
+      console.log('Update conflicts detected:', conflicts);
       res.status(400);
-      throw new Error('Conflit de séance détecté: ' + conflicts.join(', '));
+      throw new Error(conflicts.join('\n\n'));
     }
   }
 
@@ -170,54 +172,78 @@ const checkSessionConflicts = async ({ room, teacher, classId, dayOfWeek, timeSl
   const roomConflict = await Session.findOne({
     ...baseQuery,
     room
-  });
+  }).populate('class').populate('teacher').populate('course').populate('room');
   
   if (roomConflict) {
-    conflicts.push('La salle est déjà réservée pour ce créneau horaire');
+    const groupInfo = roomConflict.group ? ` (${roomConflict.group})` : '';
+    const sessionType = roomConflict.type === 'LECTURE' ? 'Cours' : roomConflict.type === 'TUTORIAL' ? 'TD' : 'TP';
+    conflicts.push(`Conflit de salle: La salle "${roomConflict.room?.name}" est déjà occupée par:\n• Classe: ${roomConflict.class?.name}${groupInfo}\n• Enseignant: ${roomConflict.teacher?.firstName} ${roomConflict.teacher?.lastName}\n• Cours: ${roomConflict.course?.name} (${sessionType})`);
   }
   
   // Check teacher conflict
   const teacherConflict = await Session.findOne({
     ...baseQuery,
     teacher
-  });
+  }).populate('class').populate('teacher').populate('course').populate('room');
   
   if (teacherConflict) {
-    conflicts.push('L\'enseignant est déjà assigné à une autre séance à cette heure');
+    conflicts.push(`Conflit d'enseignant: L'enseignant "${teacherConflict.teacher?.firstName} ${teacherConflict.teacher?.lastName}" enseigne déjà à la classe "${teacherConflict.class?.name}" dans la salle "${teacherConflict.room?.name}" pour le cours "${teacherConflict.course?.name}"`);
   }
   
-  // For TP sessions with groups, allow up to 2 sessions per class
-  if (type !== 'PRACTICAL' || !group) {
-    // For non-TP sessions or TP without group, check normal class conflict
-    const classConflict = await Session.findOne({
-      ...baseQuery,
-      class: classId
-    });
-    
-    if (classConflict) {
-      conflicts.push('La classe a déjà une séance programmée à cette heure');
-    }
-  } else {
-    // For TP with groups, check if there are already 2 sessions for this class
-    const classSessions = await Session.find({
-      ...baseQuery,
-      class: classId,
-      type: 'PRACTICAL'
-    });
-    
-    if (classSessions.length >= 2) {
-      conflicts.push('La classe a déjà le nombre maximum de groupes TP (2) pour ce créneau');
+  // Gestion des conflits selon le type de séance
+  const existingSessions = await Session.find({
+    ...baseQuery,
+    class: classId
+  }).populate('class').populate('teacher').populate('course').populate('room');
+  
+  if (type === 'LECTURE') {
+    // Pour les cours magistraux, vérifier qu'il n'y a pas d'autre cours
+    const lectureConflict = existingSessions.find(session => session.type === 'LECTURE');
+    if (lectureConflict) {
+      conflicts.push(`Conflit de classe: La classe "${lectureConflict.class?.name}" a déjà un cours magistral "${lectureConflict.course?.name}" avec l'enseignant "${lectureConflict.teacher?.firstName} ${lectureConflict.teacher?.lastName}" dans la salle "${lectureConflict.room?.name}"`);
     }
     
-    // Check if the group name is already used for this class at this time
-    const groupConflict = await Session.findOne({
-      ...baseQuery,
-      class: classId,
-      group
-    });
-    
-    if (groupConflict) {
-      conflicts.push(`Le groupe "${group}" a déjà une séance pour cette classe à cette heure`);
+    // Un cours magistral peut coexister avec des TP (groupes différents)
+    // Pas de conflit avec les TP
+  } else if (type === 'PRACTICAL') {
+    // Pour les TP, vérifier les groupes
+    if (!group) {
+      conflicts.push('Un groupe doit être spécifié pour les séances de TP');
+    } else {
+      // Vérifier si le même groupe a déjà une séance
+      const groupConflict = existingSessions.find(session => 
+        session.group === group
+      );
+      
+      if (groupConflict) {
+        conflicts.push(`Conflit de groupe: Le groupe "${group}" de la classe "${groupConflict.class?.name}" a déjà une séance "${groupConflict.course?.name}" avec l'enseignant "${groupConflict.teacher?.firstName} ${groupConflict.teacher?.lastName}" dans la salle "${groupConflict.room?.name}"`);
+      }
+      
+      // Vérifier le nombre maximum de TP (2 groupes max)
+      const tpSessions = existingSessions.filter(session => session.type === 'PRACTICAL');
+      if (tpSessions.length >= 2) {
+        conflicts.push('La classe a déjà le nombre maximum de groupes TP (2) pour ce créneau');
+      }
+    }
+  } else if (type === 'TUTORIAL') {
+    // Pour les TD, même logique que les TP
+    if (group) {
+      const groupConflict = existingSessions.find(session => 
+        session.group === group
+      );
+      
+      if (groupConflict) {
+        conflicts.push(`Conflit de groupe TD: Le groupe "${group}" de la classe "${groupConflict.class?.name}" a déjà une séance "${groupConflict.course?.name}" avec l'enseignant "${groupConflict.teacher?.firstName} ${groupConflict.teacher?.lastName}" dans la salle "${groupConflict.room?.name}"`);
+      }
+    } else {
+      // TD sans groupe - vérifier qu'il n'y a pas d'autre TD sans groupe
+      const tutorialConflict = existingSessions.find(session => 
+        session.type === 'TUTORIAL' && !session.group
+      );
+      
+      if (tutorialConflict) {
+        conflicts.push(`Conflit de classe TD: La classe "${tutorialConflict.class?.name}" a déjà un TD "${tutorialConflict.course?.name}" avec l'enseignant "${tutorialConflict.teacher?.firstName} ${tutorialConflict.teacher?.lastName}" dans la salle "${tutorialConflict.room?.name}"`);
+      }
     }
   }
   

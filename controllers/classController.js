@@ -1,4 +1,5 @@
 const Class = require('../models/Class');
+const Session = require('../models/Session');
 const asyncHandler = require('express-async-handler');
 
 // @desc    Get all classes
@@ -83,8 +84,13 @@ const deleteClass = asyncHandler(async (req, res) => {
   const classItem = await Class.findById(req.params.id);
 
   if (classItem) {
+    // Supprimer toutes les séances associées à cette classe
+    await Session.deleteMany({ class: req.params.id });
+    
+    // Supprimer la classe
     await Class.findByIdAndDelete(req.params.id);
-    res.json({ message: 'Classe supprimée avec succès' });
+    
+    res.json({ message: 'Classe et ses séances supprimées avec succès' });
   } else {
     res.status(404);
     throw new Error('Classe non trouvée');

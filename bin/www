@@ -7,12 +7,16 @@
 var app = require('../app');
 var debug = require('debug')('backend:server');
 var http = require('http');
+var https = require('https');
+var fs = require('fs');
+var path = require('path');
 
 /**
  * Get port from environment and store in Express.
  */
 
 var port = normalizePort(process.env.PORT || '8080');
+var httpsPort = normalizePort(process.env.HTTPS_PORT || '8443');
 app.set('port', port);
 
 /**
@@ -22,10 +26,38 @@ app.set('port', port);
 var server = http.createServer(app);
 
 /**
+ * Create HTTPS server if certificates exist.
+ */
+
+var httpsServer;
+try {
+  const privateKey = fs.readFileSync(path.join(__dirname, '../certs/private-key.pem'), 'utf8');
+  const certificate = fs.readFileSync(path.join(__dirname, '../certs/certificate.pem'), 'utf8');
+  
+  const credentials = {
+    key: privateKey,
+    cert: certificate
+  };
+  
+  httpsServer = https.createServer(credentials, app);
+  
+  httpsServer.listen(httpsPort, '0.0.0.0');
+  httpsServer.on('error', onError);
+  httpsServer.on('listening', () => {
+    console.log(`HTTPS Server running on https://0.0.0.0:${httpsPort}`);
+  });
+  
+  console.log(`HTTPS enabled on port ${httpsPort}`);
+} catch (error) {
+  console.log('HTTPS certificates not found. Running HTTP only.');
+  console.log('Run "node generate-cert.js" to generate SSL certificates.');
+}
+
+/**
  * Listen on provided port, on all network interfaces.
  */
 
-server.listen(port);
+server.listen(port, '0.0.0.0');
 server.on('error', onError);
 server.on('listening', onListening);
 

@@ -97,14 +97,12 @@ const updateSession = asyncHandler(async (req, res) => {
   }
 
   // Check for conflicts only if time/room/teacher/class has changed
-  if (
-    session.room.toString() !== room ||
-    session.teacher.toString() !== teacher ||
-    session.class.toString() !== classId ||
-    session.dayOfWeek !== dayOfWeek ||
-    session.timeSlot !== timeSlot ||
-    session.semester !== semester
-  ) {
+  const roomChanged = (session.room?.toString() || null) !== (room || null);
+  const teacherChanged = session.teacher.toString() !== teacher;
+  const classChanged = session.class.toString() !== classId;
+  const timeChanged = session.dayOfWeek !== dayOfWeek || session.timeSlot !== timeSlot || session.semester !== semester;
+  
+  if (roomChanged || teacherChanged || classChanged || timeChanged) {
     const conflicts = await checkSessionConflicts({
       room,
       teacher,
@@ -127,7 +125,7 @@ const updateSession = asyncHandler(async (req, res) => {
   session.course = course || session.course;
   session.teacher = teacher || session.teacher;
   session.class = classId || session.class;
-  session.room = room || session.room;
+  session.room = room !== undefined ? room : session.room;
   session.type = type || session.type;
   session.dayOfWeek = dayOfWeek || session.dayOfWeek;
   session.timeSlot = timeSlot || session.timeSlot;
@@ -168,16 +166,18 @@ const checkSessionConflicts = async ({ room, teacher, classId, dayOfWeek, timeSl
     baseQuery._id = { $ne: excludeSessionId };
   }
   
-  // Check room conflict
-  const roomConflict = await Session.findOne({
-    ...baseQuery,
-    room
-  }).populate('class').populate('teacher').populate('course').populate('room');
-  
-  if (roomConflict) {
-    const groupInfo = roomConflict.group ? ` (${roomConflict.group})` : '';
-    const sessionType = roomConflict.type === 'LECTURE' ? 'Cours' : roomConflict.type === 'TUTORIAL' ? 'TD' : 'TP';
-    conflicts.push(`Conflit de salle: La salle "${roomConflict.room?.name}" est déjà occupée par:\n• Classe: ${roomConflict.class?.name}${groupInfo}\n• Enseignant: ${roomConflict.teacher?.firstName} ${roomConflict.teacher?.lastName}\n• Cours: ${roomConflict.course?.name} (${sessionType})`);
+  // Check room conflict only if room is specified (not null)
+  if (room) {
+    const roomConflict = await Session.findOne({
+      ...baseQuery,
+      room
+    }).populate('class').populate('teacher').populate('course').populate('room');
+    
+    if (roomConflict) {
+      const groupInfo = roomConflict.group ? ` (${roomConflict.group})` : '';
+      const sessionType = roomConflict.type === 'LECTURE' ? 'Cours' : roomConflict.type === 'TUTORIAL' ? 'TD' : 'TP';
+      conflicts.push(`Conflit de salle: La salle "${roomConflict.room?.name}" est déjà occupée par:\n• Classe: ${roomConflict.class?.name}${groupInfo}\n• Enseignant: ${roomConflict.teacher?.firstName} ${roomConflict.teacher?.lastName}\n• Cours: ${roomConflict.course?.name} (${sessionType})`);
+    }
   }
   
   // Check teacher conflict

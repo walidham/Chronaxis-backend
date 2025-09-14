@@ -19,7 +19,8 @@ const sessionSchema = new mongoose.Schema({
   room: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Room',
-    required: true
+    required: false,
+    default: null
   },
   type: {
     type: String,
@@ -51,7 +52,11 @@ const sessionSchema = new mongoose.Schema({
 });
 
 // Vérification des contraintes de chevauchement
-sessionSchema.index({ room: 1, dayOfWeek: 1, timeSlot: 1, semester: 1 }, { unique: true });
+// Index unique sur room seulement si room n'est pas null
+sessionSchema.index(
+  { room: 1, dayOfWeek: 1, timeSlot: 1, semester: 1 }, 
+  { unique: true, partialFilterExpression: { room: { $ne: null } } }
+);
 sessionSchema.index({ teacher: 1, dayOfWeek: 1, timeSlot: 1, semester: 1 }, { unique: true });
 // Suppression de l'index unique sur la classe pour permettre plusieurs sessions de TP
 sessionSchema.index({ class: 1, dayOfWeek: 1, timeSlot: 1, semester: 1 });

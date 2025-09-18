@@ -14,32 +14,16 @@ connectDB();
 
 var app = express();
 
-// CORS configuration
-const corsOptions = {
-  origin: function (origin, callback) {
-    // Permettre toutes les origines en développement
-    if (!origin || process.env.NODE_ENV !== 'production') {
-      return callback(null, true);
-    }
-    // En production, vérifier les origines autorisées
-    const allowedOrigins = [
-      'https://chronaxis-frontend.vercel.app',
-      'https://chronaxis-frontend-git-master-walidham.vercel.app',
-      'https://chronaxis-frontend-walidham.vercel.app',
-      'https://purple-tree-0cc73c21e.1.azurestaticapps.net'
-    ];
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+// CORS configuration - Allow all origins for Azure deployment
+app.use(cors({
+  origin: true,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
-};
+}));
 
-app.use(cors(corsOptions));
+// Handle preflight requests
+app.options('*', cors());
 
 // Add request logging
 app.use((req, res, next) => {

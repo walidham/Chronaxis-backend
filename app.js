@@ -25,7 +25,8 @@ const corsOptions = {
     const allowedOrigins = [
       'https://chronaxis-frontend.vercel.app',
       'https://chronaxis-frontend-git-master-walidham.vercel.app',
-      'https://chronaxis-frontend-walidham.vercel.app'
+      'https://chronaxis-frontend-walidham.vercel.app',
+      'https://purple-tree-0cc73c21e.1.azurestaticapps.net'
     ];
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);

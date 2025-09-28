@@ -50,6 +50,7 @@ const academicYearRoutes = require('./routes/academicYearRoutes');
 const trackRoutes = require('./routes/trackRoutes');
 const gradeRoutes = require('./routes/gradeRoutes');
 const userRoutes = require('./routes/userRoutes');
+const contactRoutes = require('./routes/contactRoutes');
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -65,6 +66,7 @@ app.use('/api/academic-years', academicYearRoutes);
 app.use('/api/tracks', trackRoutes);
 app.use('/api/grades', gradeRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/contact', contactRoutes);
 
 // 404 handler
 app.use((req, res, next) => {

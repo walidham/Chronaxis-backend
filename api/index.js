@@ -168,29 +168,21 @@ const { protect } = require('../middleware/authMiddleware');
 
 // Authentication middleware for protected routes
 app.use('/api', (req, res, next) => {
-  // Public routes that don't require authentication
-  const publicRoutes = [
-    '/api/health',
-    '/api/test/',
-    '/api/auth/login',
-    '/api/contact'
-  ];
-  
-  // Allow GET requests to public routes for student space
-  const isPublicGet = req.method === 'GET' && (
-    req.path.startsWith('/api/departments') ||
-    req.path.startsWith('/api/academic-years') ||
-    req.path.startsWith('/api/classes') ||
-    req.path.startsWith('/api/sessions')
-  );
-  
-  // Allow POST to contact form
-  const isContactPost = req.method === 'POST' && req.path === '/api/contact';
-  
-  // Check if route is public
-  const isPublicRoute = publicRoutes.some(route => req.path.startsWith(route));
-  
-  if (isPublicRoute || isPublicGet || isContactPost || req.method === 'OPTIONS') {
+  // Skip authentication for specific routes
+  if (
+    req.path === '/api/health' ||
+    req.path.startsWith('/api/test/') ||
+    req.path.startsWith('/api/auth/') ||
+    req.path.startsWith('/api/direct/') ||
+    (req.method === 'POST' && req.path === '/api/contact') ||
+    (req.method === 'GET' && (
+      req.path.startsWith('/api/departments') ||
+      req.path.startsWith('/api/academic-years') ||
+      req.path.startsWith('/api/classes') ||
+      req.path.startsWith('/api/sessions')
+    )) ||
+    req.method === 'OPTIONS'
+  ) {
     return next();
   }
   

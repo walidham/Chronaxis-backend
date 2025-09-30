@@ -203,7 +203,60 @@ app.use('/api', (req, res, next) => {
   protect(req, res, next);
 });
 
-// Routes
+// Working login route (replace problematic authRoutes)
+app.post('/api/auth/login', async (req, res) => {
+  try {
+    console.log('🔑 Auth login attempt:', { email: req.body?.email, hasPassword: !!req.body?.password });
+    
+    const { email, password } = req.body;
+    
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email et mot de passe requis' });
+    }
+    
+    const User = require('../models/User');
+    const jwt = require('jsonwebtoken');
+    const bcrypt = require('bcryptjs');
+    
+    const user = await User.findOne({ email }).populate('department');
+    console.log('👤 User found:', user ? 'Yes' : 'No');
+    
+    if (!user) {
+      return res.status(401).json({ message: 'Email ou mot de passe incorrect' });
+    }
+    
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    console.log('🔒 Password match:', passwordMatch);
+    
+    if (!passwordMatch) {
+      return res.status(401).json({ message: 'Email ou mot de passe incorrect' });
+    }
+    
+    if (!user.isActive) {
+      return res.status(401).json({ message: 'Compte désactivé' });
+    }
+    
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'fallback_secret', {
+      expiresIn: '30d',
+    });
+    
+    res.json({
+      _id: user._id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: user.role,
+      department: user.department,
+      token: token,
+    });
+    
+  } catch (error) {
+    console.error('❌ Auth login error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Other auth routes
 app.use('/api/auth', authRoutes);
 app.use('/api/university', universityRoutes);
 app.use('/api/departments', departmentRoutes);

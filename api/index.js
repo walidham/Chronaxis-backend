@@ -231,49 +231,41 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 // Other auth routes (added directly to avoid conflicts)
-app.get('/api/auth/me', async (req, res) => {
+app.get('/api/auth/me', protect, async (req, res) => {
   try {
-    const { protect } = require('../middleware/authMiddleware');
-    // Apply protection manually
-    protect(req, res, async () => {
-      const User = require('../models/User');
-      const user = await User.findById(req.user.id).populate('department').select('-password');
-      res.json(user);
-    });
+    const User = require('../models/User');
+    const user = await User.findById(req.user.id).populate('department').select('-password');
+    res.json(user);
   } catch (error) {
     console.error('Get me error:', error);
     res.status(500).json({ message: error.message });
   }
 });
 
-app.put('/api/auth/change-password', async (req, res) => {
+app.put('/api/auth/change-password', protect, async (req, res) => {
   try {
-    const { protect } = require('../middleware/authMiddleware');
-    // Apply protection manually
-    protect(req, res, async () => {
-      const { currentPassword, newPassword } = req.body;
-      
-      if (!currentPassword || !newPassword) {
-        return res.status(400).json({ message: 'Mot de passe actuel et nouveau mot de passe requis' });
-      }
-      
-      if (newPassword.length < 6) {
-        return res.status(400).json({ message: 'Le nouveau mot de passe doit contenir au moins 6 caractères' });
-      }
-      
-      const User = require('../models/User');
-      const bcrypt = require('bcryptjs');
-      
-      const user = await User.findById(req.user.id);
-      
-      if (user && (await bcrypt.compare(currentPassword, user.password))) {
-        user.password = await bcrypt.hash(newPassword, 12);
-        await user.save();
-        res.json({ message: 'Mot de passe modifié avec succès' });
-      } else {
-        res.status(400).json({ message: 'Mot de passe actuel incorrect' });
-      }
-    });
+    const { currentPassword, newPassword } = req.body;
+    
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: 'Mot de passe actuel et nouveau mot de passe requis' });
+    }
+    
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: 'Le nouveau mot de passe doit contenir au moins 6 caractères' });
+    }
+    
+    const User = require('../models/User');
+    const bcrypt = require('bcryptjs');
+    
+    const user = await User.findById(req.user.id);
+    
+    if (user && (await bcrypt.compare(currentPassword, user.password))) {
+      user.password = await bcrypt.hash(newPassword, 12);
+      await user.save();
+      res.json({ message: 'Mot de passe modifié avec succès' });
+    } else {
+      res.status(400).json({ message: 'Mot de passe actuel incorrect' });
+    }
   } catch (error) {
     console.error('Change password error:', error);
     res.status(500).json({ message: error.message });

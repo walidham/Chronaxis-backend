@@ -47,6 +47,7 @@ const adminOrDepartmentDirector = (req, res, next) => {
   }
 };
 
-const adminOnly = admin;
+// Combined middleware that includes protection and admin check
+const adminOnly = [protect, admin];
 
 module.exports = { protect, admin, adminOnly, adminOrDepartmentDirector };

@@ -159,6 +159,9 @@ app.post('/api/direct/login', async (req, res) => {
   }
 });
 
+// Import auth middleware first
+const { protect } = require('../middleware/authMiddleware');
+
 // Import routes
 const authRoutes = require('../routes/authRoutes');
 const universityRoutes = require('../routes/universityRoutes');
@@ -272,7 +275,6 @@ app.put('/api/auth/change-password', protect, async (req, res) => {
   }
 });
 // Apply authentication middleware only to admin routes
-const { protect } = require('../middleware/authMiddleware');
 
 // Public routes (no auth needed)
 app.use('/api/contact', contactRoutes);

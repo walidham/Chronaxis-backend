@@ -9,6 +9,20 @@ dotenv.config();
 // Connect to database
 connectDB();
 
+// Import all models to register them
+require('../models/University');
+require('../models/Department');
+require('../models/Track');
+require('../models/Grade');
+require('../models/AcademicYear');
+require('../models/Teacher');
+require('../models/Room');
+require('../models/Course');
+require('../models/Class');
+require('../models/Session');
+require('../models/User');
+require('../models/ContactMessage');
+
 const app = express();
 
 // Basic CORS

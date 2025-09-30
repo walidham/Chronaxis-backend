@@ -178,25 +178,7 @@ const contactRoutes = require('../routes/contactRoutes');
 // Basic auth middleware
 const { protect } = require('../middleware/authMiddleware');
 
-// Simplified authentication strategy
-app.use('/api', (req, res, next) => {
-  // Public routes - no authentication needed
-  if (
-    req.path === '/api/health' ||
-    req.path.startsWith('/api/test/') ||
-    req.path.startsWith('/api/auth/') ||
-    req.path.startsWith('/api/direct/') ||
-    req.method === 'GET' ||  // All GET requests are public (for students)
-    (req.method === 'POST' && req.path === '/api/contact') ||
-    req.method === 'OPTIONS'
-  ) {
-    return next();
-  }
-  
-  // Only POST, PUT, DELETE operations require authentication (admin only)
-  const { protect } = require('../middleware/authMiddleware');
-  protect(req, res, next);
-});
+// No global authentication middleware - will be applied per route group
 
 // Working login route (replace problematic authRoutes)
 app.post('/api/auth/login', async (req, res) => {
@@ -300,19 +282,70 @@ app.put('/api/auth/change-password', async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-app.use('/api/university', universityRoutes);
-app.use('/api/departments', departmentRoutes);
-app.use('/api/teachers', teacherRoutes);
-app.use('/api/classes', classRoutes);
-app.use('/api/courses', courseRoutes);
-app.use('/api/rooms', roomRoutes);
-app.use('/api/sessions', sessionRoutes);
-app.use('/api/study-plans', studyPlanRoutes);
-app.use('/api/academic-years', academicYearRoutes);
-app.use('/api/tracks', trackRoutes);
-app.use('/api/grades', gradeRoutes);
-app.use('/api/users', userRoutes);
+// Apply authentication middleware only to admin routes
+const { protect } = require('../middleware/authMiddleware');
+
+// Public routes (no auth needed)
 app.use('/api/contact', contactRoutes);
+
+// Routes with mixed access (GET public, POST/PUT/DELETE protected)
+app.use('/api/university', (req, res, next) => {
+  if (req.method === 'GET') return next();
+  protect(req, res, next);
+}, universityRoutes);
+
+app.use('/api/departments', (req, res, next) => {
+  if (req.method === 'GET') return next();
+  protect(req, res, next);
+}, departmentRoutes);
+
+app.use('/api/teachers', (req, res, next) => {
+  if (req.method === 'GET') return next();
+  protect(req, res, next);
+}, teacherRoutes);
+
+app.use('/api/classes', (req, res, next) => {
+  if (req.method === 'GET') return next();
+  protect(req, res, next);
+}, classRoutes);
+
+app.use('/api/courses', (req, res, next) => {
+  if (req.method === 'GET') return next();
+  protect(req, res, next);
+}, courseRoutes);
+
+app.use('/api/rooms', (req, res, next) => {
+  if (req.method === 'GET') return next();
+  protect(req, res, next);
+}, roomRoutes);
+
+app.use('/api/sessions', (req, res, next) => {
+  if (req.method === 'GET') return next();
+  protect(req, res, next);
+}, sessionRoutes);
+
+app.use('/api/study-plans', (req, res, next) => {
+  if (req.method === 'GET') return next();
+  protect(req, res, next);
+}, studyPlanRoutes);
+
+app.use('/api/academic-years', (req, res, next) => {
+  if (req.method === 'GET') return next();
+  protect(req, res, next);
+}, academicYearRoutes);
+
+app.use('/api/tracks', (req, res, next) => {
+  if (req.method === 'GET') return next();
+  protect(req, res, next);
+}, trackRoutes);
+
+app.use('/api/grades', (req, res, next) => {
+  if (req.method === 'GET') return next();
+  protect(req, res, next);
+}, gradeRoutes);
+
+// Fully protected routes (all methods require auth)
+app.use('/api/users', protect, userRoutes);
 
 // 404 handler
 app.use((req, res, next) => {

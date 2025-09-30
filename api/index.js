@@ -25,11 +25,23 @@ require('../models/ContactMessage');
 
 const app = express();
 
-// Basic CORS
+// Enhanced CORS configuration
 app.use(cors({
-  origin: true,
-  credentials: true
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    
+    // Allow all origins for now (you can restrict this later)
+    return callback(null, true);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Authorization']
 }));
+
+// Handle preflight requests
+app.options('*', cors());
 
 // Basic middleware
 app.use(express.json());
@@ -213,11 +225,19 @@ app.use((req, res, next) => {
   res.status(404).json({ message: `Route not found: ${req.path}` });
 });
 
-// Error handler
+// Error handler with CORS headers
 app.use((err, req, res, next) => {
   console.error('Error:', err.message);
   console.error('Stack:', err.stack);
-  res.status(500).json({
+  
+  // Ensure CORS headers are set even on errors
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  
+  const statusCode = err.statusCode || 500;
+  res.status(statusCode).json({
     message: err.message || 'Internal Server Error',
     path: req.path
   });

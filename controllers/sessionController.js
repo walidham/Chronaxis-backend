@@ -1,4 +1,8 @@
 const Session = require('../models/Session');
+const Course = require('../models/Course');
+const Teacher = require('../models/Teacher');
+const Class = require('../models/Class');
+const Room = require('../models/Room');
 const asyncHandler = require('express-async-handler');
 
 // @desc    Get all sessions

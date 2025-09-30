@@ -94,6 +94,59 @@ app.post('/api/test/login', async (req, res) => {
   }
 });
 
+// Direct login route (bypass middleware issues)
+app.post('/api/direct/login', async (req, res) => {
+  try {
+    console.log('🔑 Direct login attempt:', { email: req.body?.email, hasPassword: !!req.body?.password });
+    
+    const { email, password } = req.body;
+    
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email et mot de passe requis' });
+    }
+    
+    const User = require('../models/User');
+    const jwt = require('jsonwebtoken');
+    const bcrypt = require('bcryptjs');
+    
+    const user = await User.findOne({ email }).populate('department');
+    console.log('👤 User found:', user ? 'Yes' : 'No');
+    
+    if (!user) {
+      return res.status(401).json({ message: 'Email ou mot de passe incorrect' });
+    }
+    
+    const passwordMatch = await bcrypt.compare(password, user.password);
+    console.log('🔒 Password match:', passwordMatch);
+    
+    if (!passwordMatch) {
+      return res.status(401).json({ message: 'Email ou mot de passe incorrect' });
+    }
+    
+    if (!user.isActive) {
+      return res.status(401).json({ message: 'Compte désactivé' });
+    }
+    
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET || 'fallback_secret', {
+      expiresIn: '30d',
+    });
+    
+    res.json({
+      _id: user._id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: user.role,
+      department: user.department,
+      token: token,
+    });
+    
+  } catch (error) {
+    console.error('❌ Direct login error:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Import routes
 const authRoutes = require('../routes/authRoutes');
 const universityRoutes = require('../routes/universityRoutes');

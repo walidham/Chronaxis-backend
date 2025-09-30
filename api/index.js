@@ -37,7 +37,10 @@ app.use(express.urlencoded({ extended: false }));
 
 // Request logging
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path}`);
+  console.log(`🔍 ${req.method} ${req.path}`);
+  if (req.path === '/api/auth/login') {
+    console.log('📧 Login attempt:', { email: req.body?.email, hasPassword: !!req.body?.password });
+  }
   next();
 });
 
@@ -69,6 +72,24 @@ app.get('/api/test/classes', async (req, res) => {
     res.json({ count: classes.length, data: classes });
   } catch (error) {
     console.error('Test classes error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Test login route
+app.post('/api/test/login', async (req, res) => {
+  try {
+    console.log('🧪 Test login attempt:', req.body);
+    const User = require('../models/User');
+    const user = await User.findOne({ email: req.body.email });
+    console.log('👤 User found:', user ? 'Yes' : 'No');
+    res.json({ 
+      userExists: !!user,
+      email: req.body.email,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Test login error:', error);
     res.status(500).json({ error: error.message });
   }
 });

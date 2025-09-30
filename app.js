@@ -5,6 +5,9 @@ var logger = require('morgan');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const connectDB = require('./config/db');
+const { securityHeaders } = require('./middleware/security');
+const { securityLogger } = require('./middleware/logger');
+const { sanitizeInput } = require('./middleware/validation');
 
 // Load env vars
 dotenv.config();
@@ -13,6 +16,12 @@ dotenv.config();
 connectDB();
 
 var app = express();
+
+// Security headers
+app.use(securityHeaders);
+
+// Security logging
+app.use(securityLogger);
 
 // CORS configuration - Allow all origins for Azure deployment
 app.use(cors({
@@ -30,9 +39,52 @@ app.use((req, res, next) => {
   console.log(`${req.method} ${req.path}`, req.body);
   next();
 });
+
+// Rate limiting and security middleware
+const { apiLimiter } = require('./middleware/rateLimiter');
+app.use('/api', apiLimiter);
+
+// Global API protection middleware
+const { protect } = require('./middleware/authMiddleware');
+app.use('/api', (req, res, next) => {
+  // Public routes that don't require authentication
+  const publicRoutes = [
+    '/api/auth/login',
+    '/api/contact',
+    '/api/departments',
+    '/api/academic-years',
+    '/api/classes',
+    '/api/sessions'
+  ];
+  
+  // Allow GET requests to public routes for student space
+  const isPublicRoute = publicRoutes.some(route => req.path.startsWith(route));
+  const isPublicGet = (req.method === 'GET' || req.method === 'OPTIONS') && (
+    req.path.startsWith('/api/departments') ||
+    req.path.startsWith('/api/academic-years') ||
+    req.path.startsWith('/api/classes') ||
+    req.path.startsWith('/api/sessions')
+  );
+  
+  // Allow POST to contact form
+  const isContactPost = req.method === 'POST' && req.path === '/api/contact';
+  
+  // Allow login route
+  const isLoginRoute = req.path === '/api/auth/login';
+  
+  if (isLoginRoute || isContactPost || isPublicGet) {
+    return next();
+  }
+  
+  // All other API routes require authentication
+  protect(req, res, next);
+});
 app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: false, limit: '10mb' }));
+
+// Input sanitization
+app.use(sanitizeInput);
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 

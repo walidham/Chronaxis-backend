@@ -8,14 +8,15 @@ const {
   deleteContactMessage
 } = require('../controllers/contactController');
 const { protect, adminOnly } = require('../middleware/authMiddleware');
+const { contactLimiter } = require('../middleware/rateLimiter');
 
 // Public route for creating contact messages
-router.post('/', createContactMessage);
+router.post('/', contactLimiter, createContactMessage);
 
-// Admin routes for managing contact messages
-router.get('/', protect, adminOnly, getContactMessages);
-router.get('/:id', protect, adminOnly, getContactMessageById);
-router.put('/:id', protect, adminOnly, updateContactMessage);
-router.delete('/:id', protect, adminOnly, deleteContactMessage);
+// Admin routes for managing contact messages (protection handled globally)
+router.get('/', adminOnly, getContactMessages);
+router.get('/:id', adminOnly, getContactMessageById);
+router.put('/:id', adminOnly, updateContactMessage);
+router.delete('/:id', adminOnly, deleteContactMessage);
 
 module.exports = router;

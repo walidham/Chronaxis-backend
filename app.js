@@ -36,8 +36,18 @@ app.options('*', cors());
 
 // Add request logging
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path}`, req.body);
+  console.log(`🔍 ${req.method} ${req.path} from ${req.ip}`);
+  console.log(`   Headers: ${JSON.stringify(req.headers.authorization ? 'Bearer ***' : 'No Auth')}`);
   next();
+});
+
+// Health check endpoint (before any middleware)
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
 });
 
 // Rate limiting and security middleware
@@ -47,32 +57,28 @@ app.use('/api', apiLimiter);
 // Global API protection middleware
 const { protect } = require('./middleware/authMiddleware');
 app.use('/api', (req, res, next) => {
-  // Public routes that don't require authentication
-  const publicRoutes = [
-    '/api/auth/login',
-    '/api/contact',
-    '/api/departments',
-    '/api/academic-years',
-    '/api/classes',
-    '/api/sessions'
-  ];
+  // Allow login route
+  if (req.path === '/api/auth/login') {
+    return next();
+  }
+  
+  // Allow POST to contact form
+  if (req.method === 'POST' && req.path === '/api/contact') {
+    return next();
+  }
   
   // Allow GET requests to public routes for student space
-  const isPublicRoute = publicRoutes.some(route => req.path.startsWith(route));
-  const isPublicGet = (req.method === 'GET' || req.method === 'OPTIONS') && (
+  if (req.method === 'GET' && (
     req.path.startsWith('/api/departments') ||
     req.path.startsWith('/api/academic-years') ||
     req.path.startsWith('/api/classes') ||
     req.path.startsWith('/api/sessions')
-  );
+  )) {
+    return next();
+  }
   
-  // Allow POST to contact form
-  const isContactPost = req.method === 'POST' && req.path === '/api/contact';
-  
-  // Allow login route
-  const isLoginRoute = req.path === '/api/auth/login';
-  
-  if (isLoginRoute || isContactPost || isPublicGet) {
+  // Allow OPTIONS requests (CORS preflight)
+  if (req.method === 'OPTIONS') {
     return next();
   }
   

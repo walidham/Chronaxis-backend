@@ -178,27 +178,22 @@ const contactRoutes = require('../routes/contactRoutes');
 // Basic auth middleware
 const { protect } = require('../middleware/authMiddleware');
 
-// Authentication middleware for protected routes
+// Simplified authentication strategy
 app.use('/api', (req, res, next) => {
-  // Skip authentication for specific routes
+  // Public routes - no authentication needed
   if (
     req.path === '/api/health' ||
     req.path.startsWith('/api/test/') ||
     req.path.startsWith('/api/auth/') ||
     req.path.startsWith('/api/direct/') ||
+    req.method === 'GET' ||  // All GET requests are public (for students)
     (req.method === 'POST' && req.path === '/api/contact') ||
-    (req.method === 'GET' && (
-      req.path.startsWith('/api/departments') ||
-      req.path.startsWith('/api/academic-years') ||
-      req.path.startsWith('/api/classes') ||
-      req.path.startsWith('/api/sessions')
-    )) ||
     req.method === 'OPTIONS'
   ) {
     return next();
   }
   
-  // All other routes require authentication
+  // Only POST, PUT, DELETE operations require authentication (admin only)
   const { protect } = require('../middleware/authMiddleware');
   protect(req, res, next);
 });

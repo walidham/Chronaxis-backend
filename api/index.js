@@ -175,9 +175,6 @@ const gradeRoutes = require('../routes/gradeRoutes');
 const userRoutes = require('../routes/userRoutes');
 const contactRoutes = require('../routes/contactRoutes');
 
-// Basic auth middleware
-const { protect } = require('../middleware/authMiddleware');
-
 // No global authentication middleware - will be applied per route group
 
 // Working login route (replace problematic authRoutes)
